@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import tomllib
 from collections.abc import Iterable
 from pathlib import Path
@@ -93,11 +94,24 @@ def merge_layers(layers: Iterable[dict[str, Any]]) -> dict[str, Any]:
     return merged
 
 
+def global_user_config_dir() -> Path:
+    """Directory holding per-user global TOML layers.
+
+    Defaults to ``~/.bmad/config``. ``BMAD_CONFIG_HOME`` overrides the location
+    so tests (and unusual setups) can isolate the global layer without touching
+    ``HOME``.
+    """
+    override = os.environ.get("BMAD_CONFIG_HOME")
+    return Path(override).expanduser() if override else Path.home() / ".bmad" / "config"
+
+
 def load_central_config(project_root: Path) -> dict[str, Any]:
     bmad_dir = project_root / "_bmad"
+    global_dir = global_user_config_dir()
     return merge_layers(
         (
             load_toml(bmad_dir / "config.toml", required=True),
+            load_toml(global_dir / "config.user.toml"),
             load_toml(bmad_dir / "custom" / "config.toml"),
             load_toml(bmad_dir / "custom" / "config.user.toml"),
         )
@@ -107,9 +121,11 @@ def load_central_config(project_root: Path) -> dict[str, Any]:
 def load_customization(project_root: Path | None, skill_dir: Path) -> dict[str, Any]:
     skill_name = skill_dir.name
     custom_dir = project_root / "_bmad" / "custom" if project_root else None
+    global_dir = global_user_config_dir()
     return merge_layers(
         (
             load_toml(skill_dir / "customize.toml", required=True),
+            load_toml(global_dir / f"{skill_name}.user.toml"),
             load_toml(custom_dir / f"{skill_name}.toml") if custom_dir else {},
             load_toml(custom_dir / f"{skill_name}.user.toml") if custom_dir else {},
         )

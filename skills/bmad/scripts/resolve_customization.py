@@ -2,7 +2,7 @@
 # /// script
 # requires-python = ">=3.11"
 # ///
-"""Resolve a skill's default, team, and user TOML customization layers."""
+"""Resolve a skill's default, global user, team, and user TOML customization layers."""
 
 import argparse
 import json
@@ -111,7 +111,7 @@ def write_json_stdout(output) -> None:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Resolve skill customization using three-layer TOML merge.")
+    parser = argparse.ArgumentParser(description="Resolve skill customization using four-layer TOML merge (skill default, global user, project team, project user).")
     parser.add_argument("--skill", "-s", required=True, help="Absolute path to the skill directory")
     parser.add_argument(
         "--project-root",
